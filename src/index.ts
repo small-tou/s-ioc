@@ -15,16 +15,32 @@ function Injectable(options?: any) {
 
 function Inject(token: any) {
   return function (target: any, targetKey: string, indexOrPropertyDescriptor: any) {
-    let injectedClasses = Reflect.getMetadata("scope:injectedClasses", target.constructor) || [];
-    injectedClasses = [
-      ...injectedClasses,
-      {
-        targetKey: targetKey,
-        constructor: token.prototype.constructor,
-      },
-    ];
-    // 将 token 作为目标类记录到当前类的 metadata 中
-    Reflect.defineMetadata("scope:injectedClasses", injectedClasses, target.constructor);
+    if (targetKey) {
+      // 属性注入
+      let injectedClasses = Reflect.getMetadata("scope:injectedClasses", target.constructor) || [];
+      injectedClasses = [
+        ...injectedClasses,
+        {
+          targetKey: targetKey,
+          constructor: token.prototype.constructor,
+        },
+      ];
+      // 将 token 作为目标类记录到当前类的 metadata 中
+      Reflect.defineMetadata("scope:injectedClasses", injectedClasses, target.constructor);
+    } else {
+      // 参数注入
+      const argsIndex = indexOrPropertyDescriptor;
+      let injectedClasses = Reflect.getMetadata("scope:injectedClasses", target.prototype.constructor) || [];
+      injectedClasses = [
+        ...injectedClasses,
+        {
+          index: argsIndex,
+          constructor: token.prototype.constructor,
+        },
+      ];
+      // 将 token 作为目标类记录到当前类的 metadata 中
+      Reflect.defineMetadata("scope:injectedClasses", injectedClasses, target.prototype.constructor);
+    }
   };
 }
 
@@ -37,24 +53,54 @@ function Resolve(metadata?: { providers?: any[]; imports?: any[] }) {
     const newModuleID = moduleUniqId++;
     Reflect.defineMetadata("scope:moduleID", newModuleID, target);
     const targetContructor = target.prototype.constructor;
+    console.log(targetContructor);
     return function () {
       // eslint-disable-next-line prefer-rest-params
-      const instance = new targetContructor(...arguments);
+      const argsInjectedInstance: any[] = [];
+      const propertyInjectedInstance: any[] = [];
       const injectedClasses = Reflect.getMetadata("scope:injectedClasses", targetContructor) || [];
       if (injectedClasses) {
-        injectedClasses.forEach((e: { targetKey: string; constructor: { new (...args: any[]): any } }) => {
-          const { targetKey, constructor } = e;
-          // 检查类是否是 injectable 的，不是的话报错
-          const injectableCheckMeta = Reflect.getMetadata("scope:injectable", constructor);
-          if (!injectableCheckMeta) {
-            throw new Error(`${constructor.name} is not injectable`);
+        injectedClasses.forEach(
+          (e: { targetKey: string; index: number; constructor: { new (...args: any[]): any } }) => {
+            const { targetKey, constructor, index } = e;
+            console.log(e);
+            // 检查类是否是 injectable 的，不是的话报错
+            const injectableCheckMeta = Reflect.getMetadata("scope:injectable", constructor);
+            if (!injectableCheckMeta) {
+              throw new Error(`${constructor.name} is not injectable`);
+            }
+            const injectedInstance = new constructor();
+
+            if (targetKey) {
+              // 属性注入
+              propertyInjectedInstance.push({
+                targetKey,
+                instance: injectedInstance,
+              });
+            } else {
+              // 参数注入
+              argsInjectedInstance.push({
+                index,
+                instance: injectedInstance,
+              });
+            }
           }
-          const injectedInstance = new constructor(instance);
-          console.log("inject success", injectedInstance);
-          Object.assign(instance, { [targetKey]: injectedInstance });
-        });
+        );
       }
-      return instance;
+      const args = Array.from(arguments);
+      argsInjectedInstance.forEach((e: { index: number; instance: any }) => {
+        args[e.index] = e.instance;
+      });
+      const targetInstance = new targetContructor(...args);
+      console.log("propertyInjectedInstance", propertyInjectedInstance);
+      propertyInjectedInstance.forEach((e: { targetKey: string; instance: any }) => {
+        const { targetKey, instance } = e;
+        Object.assign(targetInstance, {
+          [targetKey]: instance,
+        });
+        // console.log("inject success", instance);
+      });
+      return targetInstance;
     } as any;
   };
 }

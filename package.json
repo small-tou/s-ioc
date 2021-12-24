@@ -32,7 +32,9 @@
     "webpack": "^4.17.0",
     "webpack-cli": "^3.1.0",
     "webpack-dev-server": "^3.1.5",
-    "webpack-env": "^0.8.0"
+    "webpack-env": "^0.8.0",
+    "@types/webpack-env": "^1.16.2",
+    "colors-web": "^0.1.1"
   },
   "directories": {
     "test": "tests"
@@ -47,17 +49,10 @@
     "build": "npm run build:prod",
     "build:dev": "webpack --mode development --config ./webpack.config.js --progress --color --display-error-details",
     "build:prod": "cross-env NODE_ENV=production webpack --mode production --config ./webpack.config.js  --progress  --color --display-error-details --bail",
-    "clean": "npm cache clear && rimraf -- dist",
-    "server": "npm run server:dev",
-    "server:dev": "webpack-dev-server --mode development --config ./webpack.config.js --hot --inline --progress --watch --open",
-    "server:prod": "cross-env NODE_ENV=production webpack-dev-server  --mode production --config ./webpack.config.js --port 3000 --host 0.0.0.0 --hot --inline --progress  --watch --open --content-base dist/",
-    "start": "npm run server:dev",
-    "test": "karma start"
+    "start": "npm run server:dev"
   },
   "version": "0.0.1",
   "dependencies": {
-    "@types/webpack-env": "^1.16.2",
-    "colors-web": "^0.1.1",
     "reflect-metadata": "^0.1.13"
   }
 }

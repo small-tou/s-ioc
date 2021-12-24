@@ -8,6 +8,9 @@ npm run start
 
 ## 待实现
 
+[x] 属性注入
+[x] 参数注入
+
 - container 管理
 - scope
 - 依赖管理

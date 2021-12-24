@@ -27,15 +27,32 @@ class Dog {
   }
 }
 
+// @Resolve()
+// class Home {
+//   name = randomName(["home1", "home2", "home3"]);
+//   @Inject(User)
+//   public user?: User;
+
+//   @Inject(Dog)
+//   public dog?: Dog;
+//   constructor() {
+//     console.log("home created");
+//   }
+
+//   report() {
+//     logger(colors().blueBg().white().padding(3, 5).log("report home"));
+//     logger(colors().blue().padding(3, 5).log(`this is home ${this.name}`));
+//     logger(colors().redBg().white().padding(3, 5).log("report user"));
+//     this.user?.report();
+//     logger(colors().greenBg().white().padding(3, 5).log("report dog"));
+//     this.dog?.report();
+//   }
+// }
+
 @Resolve()
 class Home {
   name = randomName(["home1", "home2", "home3"]);
-  @Inject(User)
-  public user?: User;
-
-  @Inject(Dog)
-  public dog?: Dog;
-  constructor() {
+  constructor(@Inject(User) public user?: User, @Inject(Dog) public dog?: Dog) {
     console.log("home created");
   }
 
