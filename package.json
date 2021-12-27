@@ -41,7 +41,7 @@
   },
   "license": "ISC",
   "main": "src/index.js",
-  "name": "ioccoi",
+  "name": "s-ioc",
   "files": [
     "src"
   ],
